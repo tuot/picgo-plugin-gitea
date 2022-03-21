@@ -17,7 +17,8 @@ const parseOptions = (
   method: string,
   url: string,
   headers: any,
-  body: object = {}
+  body: object = {},
+  ignoreCertErr: boolean = false,
 ) => {
   return {
     method: method,
@@ -25,7 +26,7 @@ const parseOptions = (
     headers: headers,
     body: body,
     json: true,
-    strictSSL: false,
+    strictSSL: !ignoreCertErr,
   };
 };
 
@@ -60,7 +61,8 @@ const uploaderHandle = async (ctx: PicGo) => {
           getHeaders(config.token),
           {
             content: base64Image,
-          }
+          },
+          config.ignoreCertErr,
         );
         const body = await ctx.request(options);
         if (body) {
@@ -91,7 +93,9 @@ const getFileSha = async function (
   const opts = parseOptions(
     "GET",
     parseUrl(config, fileName),
-    getHeaders(config.token)
+    getHeaders(config.token),
+    {},
+    config.ignoreCertErr,
   );
   let file_sha = "";
   const body = await ctx.request(opts).catch((e) => {
@@ -113,6 +117,7 @@ const config = (ctx: PicGo) => {
       owner: "",
       repo: "",
       token: "",
+      ignoreCertErr: false,
       path: "",
     };
   }
@@ -157,6 +162,14 @@ const config = (ctx: PicGo) => {
       message: "example: img/",
       alias: "Path",
     },
+    {
+      name: "ignoreCertErr",
+      type: "confirm",
+      default: config.ignoreCertErr,
+      message: "If ignore Cert has expired error, please set true",
+      required: true,
+      alias: "Ignore Cert Error"
+    },
   ];
 };
 
@@ -177,7 +190,8 @@ const onRemove = async function (ctx: PicGo, files: RemoveFile[], guiApi) {
       getHeaders(config.token),
       {
         sha: sha,
-      }
+      },
+      config.ignoreCertErr,
     );
     await ctx.request(opts).catch((e) => {
       ctx.log.error(e);

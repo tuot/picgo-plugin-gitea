@@ -3,6 +3,7 @@ interface GiteaConfig {
   owner: string;
   repo: string;
   token: string;
+  ignoreCertErr?: boolean;
   path?: string;
 }
 
