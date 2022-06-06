@@ -1,6 +1,7 @@
 import PicGo from "picgo";
 const nodeUrl = require("url");
 const nodePath = require("path");
+const dayjs = require("dayjs");
 
 const UPLOADER_NAME = "gitea";
 const PLUGIN_NAME = "Gitea Img";
@@ -18,7 +19,7 @@ const parseOptions = (
   url: string,
   headers: any,
   body: object = {},
-  ignoreCertErr: boolean = false,
+  ignoreCertErr: boolean = false
 ) => {
   return {
     method: method,
@@ -32,13 +33,18 @@ const parseOptions = (
 
 const parseUrl = (config: GiteaConfig, fileName: string) => {
   const { url, owner, repo, path } = config;
+  let new_path = path;
+  if ( new_path ) {
+    new_path = dayjs().format(path) ;
+  }
+
   const myUrl = new nodeUrl.URL(url);
   myUrl.pathname = nodePath.join(
     "/api/v1/repos",
     owner,
     repo,
     "contents",
-    path,
+    new_path,
     encodeURI(fileName)
   );
   return myUrl.toString();
@@ -62,7 +68,7 @@ const uploaderHandle = async (ctx: PicGo) => {
           {
             content: base64Image,
           },
-          config.ignoreCertErr,
+          config.ignoreCertErr
         );
         const body = await ctx.request(options);
         if (body) {
@@ -95,7 +101,7 @@ const getFileSha = async function (
     parseUrl(config, fileName),
     getHeaders(config.token),
     {},
-    config.ignoreCertErr,
+    config.ignoreCertErr
   );
   let file_sha = "";
   const body = await ctx.request(opts).catch((e) => {
@@ -159,7 +165,7 @@ const config = (ctx: PicGo) => {
       type: "input",
       default: config.path,
       required: false,
-      message: "example: img/",
+      message: "example: img/. Support date format",
       alias: "Path",
     },
     {
@@ -168,7 +174,7 @@ const config = (ctx: PicGo) => {
       default: config.ignoreCertErr,
       message: "If ignore Cert has expired error, please set true",
       required: true,
-      alias: "Ignore Cert Error"
+      alias: "Ignore Cert Error",
     },
   ];
 };
@@ -191,7 +197,7 @@ const onRemove = async function (ctx: PicGo, files: RemoveFile[], guiApi) {
       {
         sha: sha,
       },
-      config.ignoreCertErr,
+      config.ignoreCertErr
     );
     await ctx.request(opts).catch((e) => {
       ctx.log.error(e);
