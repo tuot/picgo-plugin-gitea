@@ -33,10 +33,10 @@ const parseOptions = (
 
 const parseUrl = (config: GiteaConfig, fileName: string) => {
   const { url, owner, repo, path } = config;
-  let new_path = path;
-  if ( new_path ) {
-    new_path = dayjs().format(path) ;
-  }
+
+  let new_path = path.replace(/{(.*?)}/gi, (match) => {
+    return dayjs().format(match.replace(/{|}/g, ""));
+  });
 
   const myUrl = new nodeUrl.URL(url);
   myUrl.pathname = nodePath.join(
@@ -165,7 +165,7 @@ const config = (ctx: PicGo) => {
       type: "input",
       default: config.path,
       required: false,
-      message: "example: img/. Support date format",
+      message: "example: img/. Support date format with curly brackets",
       alias: "Path",
     },
     {
