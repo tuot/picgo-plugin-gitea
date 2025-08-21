@@ -34,9 +34,9 @@ const parseOptions = (
 const parseUrl = (config: GiteaConfig, fileName: string) => {
   const { url, owner, repo, path } = config;
 
-  let new_path = path.replace(/{(.*?)}/gi, (match) => {
+  let new_path = path?.replace(/{(.*?)}/gi, (match) => {
     return dayjs().format(match.replace(/{|}/g, ""));
-  });
+  }) || "/";
 
   const myUrl = new nodeUrl.URL(url);
   myUrl.pathname = nodePath.join(
